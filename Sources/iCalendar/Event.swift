@@ -8,13 +8,22 @@
 
 import Foundation
 
-struct Event {
+public struct Event {
     let uid: String
     let startDate: Date
     let endDate: Date
     let description: String?
     let summary: String?
     let location: String?
+	
+	public init(uid: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil) {
+		self.uid = uid
+		self.startDate = startDate
+		self.endDate = endDate
+		self.description = description
+		self.summary = summary
+		self.location = location
+	}
 
     init?(with encoded: [String:EventValueRepresentable]) {
         guard let startDate = encoded[Keys.startDate]?.dateValue,

@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Writer {
+public struct Writer {
     static let dateFormatter = { () -> DateFormatter in
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
@@ -22,6 +22,7 @@ struct Writer {
         PRODID;X-RICAL-TZSOURCE=TZINFO:-//Michael Brown//iCalendar//EN\r
         CALSCALE:GREGORIAN\r
         VERSION:2.0\r
+
         """
     static let calendarFooter = "END:VCALENDAR\r\n"
     static let eventHeader = "BEGIN:VEVENT\r\n"

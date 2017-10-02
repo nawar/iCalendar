@@ -8,8 +8,12 @@
 
 import Foundation
 
-struct Calendar {
+public struct Calendar {
     let events: [Event]
+	
+	public init(events: [Event]) {
+		self.events = events
+	}
 }
 
 func +(lhs: Calendar, rhs: Calendar) -> Calendar {
