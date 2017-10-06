@@ -26,27 +26,27 @@ public struct Event {
 	}
 
     init?(with encoded: [String:EventValueRepresentable]) {
-        guard let startDate = encoded[Keys.startDate]?.dateValue,
-            let endDate = encoded[Keys.endDate]?.dateValue else {
+        guard let startDate = encoded[Keys.startDate] as? Date,
+            let endDate = encoded[Keys.endDate] as? Date else {
                 return nil
         }
         
-        self.uid = encoded[Keys.uid]?.textValue ?? UUID().uuidString
+        self.uid = encoded[Keys.uid] as? String ?? UUID().uuidString
         self.startDate = startDate
         self.endDate = endDate
-        description = encoded[Keys.description]?.textValue
-        summary = encoded[Keys.summary]?.textValue
-        location = encoded[Keys.location]?.textValue        
+        description = encoded[Keys.description] as? String
+        summary = encoded[Keys.summary] as? String
+        location = encoded[Keys.location] as? String
     }
     
     var encoded: [String:EventValueRepresentable] {
         var dict: [String: EventValueRepresentable] = [:]
-        dict[Keys.uid] = EventValue(value: uid)
-        dict[Keys.startDate] = EventValue(value: startDate)
-        dict[Keys.endDate] = EventValue(value: endDate)
-        dict[Keys.description] = description.map { EventValue(value: $0) }
-        dict[Keys.summary] = summary.map { EventValue(value: $0) }
-        dict[Keys.location] = location.map { EventValue(value: $0) }
+        dict[Keys.uid] = uid
+        dict[Keys.startDate] = startDate
+        dict[Keys.endDate] = endDate
+        dict[Keys.description] = description
+        dict[Keys.summary] = summary
+        dict[Keys.location] = location
         
         return dict
     }

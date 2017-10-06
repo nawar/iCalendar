@@ -160,14 +160,14 @@ struct Parser {
                 case let key where DateKeys.contains(key):
                     guard ctx.inEvent > 0 else { throw ParserError.dateKeyOutsideOfEvent(line) }
                     if let date = parse(date: parsedLine.value, params: parsedLine.params) {
-                        ctx.values[key] = EventValue(value: date)
+                        ctx.values[key] = date
                     }
                     else {
-                        ctx.values[key] = EventValue(value: parsedLine.value)
+                        ctx.values[key] = parsedLine.value
                     }
                 case let key:
                     guard ctx.inEvent > 0 else { break }
-                    ctx.values[key] = EventValue(value: unescape(parsedLine.value))
+                    ctx.values[key] = unescape(parsedLine.value)
                 }
                 
                 return ctx

@@ -11,7 +11,7 @@ import Foundation
 public struct Writer {
     static let dateFormatter = { () -> DateFormatter in
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
+        formatter.dateFormat = "yyyyMMdd'T'HHmmss"
         return formatter
     }()
     
@@ -27,7 +27,7 @@ public struct Writer {
     static let calendarFooter = "END:VCALENDAR\r\n"
     static let eventHeader = "BEGIN:VEVENT\r\n"
     static let eventFooter = "END:VEVENT\r\n" 
-    static let dateValueParam = ";VALUE=DATE:"
+    static let dateValueParam = ";VALUE=DATE-TIME:"
     
     public static func write(calendar: Calendar) -> String {
         return calendar.events.reduce(calendarHeader) {
@@ -36,23 +36,11 @@ public struct Writer {
     }
     
     static func write(event: Event) -> String {
-        return event.encoded.sorted() {
+        return event.encoded.sorted {
             $0.0 < $1.0
         }.reduce(eventHeader) {
-            $0 + fold($1.0 + write(value: $1.1)) + "\r\n"
+            $0 + fold($1.0 + $1.1.icsText) + "\r\n"
         } + eventFooter
-    }
-    
-    static func write(value: EventValueRepresentable) -> String {
-        if let date = value.dateValue {
-            return dateValueParam + dateFormatter.string(from: date)
-        }
-        
-        if let text = value.textValue {
-            return ":" + escape(text)
-        }
-        
-        return ""
     }
     
     static func fold(_ line: String, at foldLength: Int = iCalFoldLength) -> String {
@@ -69,4 +57,16 @@ public struct Writer {
             .replace(regex: .semiColon, with: "\\\\;")
             .replace(regex: .comma, with: "\\\\,")
     }
+}
+
+extension Date: EventValueRepresentable {
+	var icsText: String {
+		return Writer.dateValueParam + Writer.dateFormatter.string(from: self)
+	}
+}
+
+extension String: EventValueRepresentable {
+	var icsText: String {
+		return ":" + Writer.escape(self)
+	}
 }
