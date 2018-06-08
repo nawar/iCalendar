@@ -7,14 +7,9 @@ let package = Package(
     products: [
         .library( name: "iCalendar", targets: ["iCalendar"]),
     ],
-    dependencies: [
-    ],
+    dependencies: [ ],
     targets: [
-        .target(
-            name: "iCalendar",
-            dependencies: []),
-        .testTarget(
-            name: "iCalendarTests",
-            dependencies: []),
+        .target( name: "iCalendar", dependencies: []),
+        .testTarget(name: "iCalendarTests", dependencies: ["iCalendar"]),
     ]
 )
