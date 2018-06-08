@@ -16,6 +16,5 @@ let package = Package(
         .testTarget(
             name: "iCalendarTests",
             dependencies: []),
-    ],
-    swiftLanguageVersions: [4]
+    ]
 )
