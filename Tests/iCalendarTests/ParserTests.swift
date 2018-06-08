@@ -6,6 +6,63 @@
 //  Copyright © 2017 iCalendar. All rights reserved.
 //
 
+import XCTest
+@testable import iCalendar
+
+class iCalendarParaser: XCTestCase {
+    
+    override func setUp() {
+        super.setUp()
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+    }
+    
+    func testLineParser() {
+        
+        print("should split the input into unfolded lines")
+        let lines = Parser.lines(ics: "Line1 Part One\r\n  Part Two\r\nLine2 Hello")
+        XCTAssertTrue(lines.count == 2)
+        XCTAssertEqual(lines[0],"Line1 Part One Part Two")
+        XCTAssertEqual(lines[1], "Line2 Hello")
+
+    }
+    
+    func testUnfoldingWhenEndWithLF() {
+        
+        print("- should unfold when only an LF terminates the line")
+        let lines = Parser.lines(ics: "Line1 Part One\n  Part Two\r\nLine2 Hello")
+        XCTAssertTrue(lines.count == 2)
+        XCTAssertEqual(lines[0], "Line1 Part One Part Two")
+        XCTAssertEqual(lines[1], "Line2 Hello")
+
+    }
+    
+    func testUnfoldingWhenStartWithTab() {
+        
+        print("should unfold when folded line starts with a tab")
+        let lines = Parser.lines(ics: "Line1 Part One\r\n\t Part Two\r\nLine2 Hello")
+        XCTAssertTrue(lines.count == 2)
+        XCTAssertEqual(lines[0], "Line1 Part One Part Two")
+        XCTAssertEqual(lines[1], "Line2 Hello")
+        
+    }
+    
+    func testWhenDoesntStartWithWhitespace() {
+        
+        print("should not unfold lines that don't start with whitespace")
+        let lines = Parser.lines(ics: "Line1\r\nLine2\r\nLine3 Hello")
+        XCTAssertEqual(lines.count, 3)
+        XCTAssertEqual(lines[0],"Line1")
+        XCTAssertEqual(lines[1],"Line2")
+        XCTAssertEqual(lines[2],"Line3 Hello")
+        
+    }
+    
+}
+
+/*
 import Foundation
 import Result
 import Nimble
@@ -16,34 +73,6 @@ import Quick
 class ParserSpec: QuickSpec {
     override func spec() {
         describe("lines") {
-            it("should split the input into unfolded lines") {
-                let lines = Parser.lines(ics: "Line1 Part One\r\n  Part Two\r\nLine2 Hello")
-                expect(lines.count).to(equal(2))
-                expect(lines[0]).to(equal("Line1 Part One Part Two"))
-                expect(lines[1]).to(equal("Line2 Hello"))
-            }
-
-            it("should unfold when only an LF terminates the line") {
-                let lines = Parser.lines(ics: "Line1 Part One\n  Part Two\r\nLine2 Hello")
-                expect(lines.count).to(equal(2))
-                expect(lines[0]).to(equal("Line1 Part One Part Two"))
-                expect(lines[1]).to(equal("Line2 Hello"))
-            }
-
-            it("should unfold when folded line starts with a tab") {
-                let lines = Parser.lines(ics: "Line1 Part One\r\n\t Part Two\r\nLine2 Hello")
-                expect(lines.count).to(equal(2))
-                expect(lines[0]).to(equal("Line1 Part One Part Two"))
-                expect(lines[1]).to(equal("Line2 Hello"))
-            }
-
-            it("should not unfold lines that don't start with whitespace") {
-                let lines = Parser.lines(ics: "Line1\r\nLine2\r\nLine3 Hello")
-                expect(lines.count).to(equal(3))
-                expect(lines[0]).to(equal("Line1"))
-                expect(lines[1]).to(equal("Line2"))
-                expect(lines[2]).to(equal("Line3 Hello"))
-            }
         }
         
         describe("unescape") {
@@ -117,3 +146,4 @@ class ParserSpec: QuickSpec {
         }
     }
 }
+ */

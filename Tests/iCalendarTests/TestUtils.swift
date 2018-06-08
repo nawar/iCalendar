@@ -6,6 +6,7 @@
 //  Copyright © 2017 iCalendar. All rights reserved.
 //
 
+/*
 import Foundation
 import XCTest
 
@@ -42,4 +43,4 @@ func testResource(from filename: String) -> String? {
     return nil;        
 }
 
-
+*/

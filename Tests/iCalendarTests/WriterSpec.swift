@@ -6,6 +6,7 @@
 //  Copyright © 2017 iCalendar. All rights reserved.
 //
 
+/*
 import Foundation
 import Nimble
 import Quick
@@ -45,3 +46,4 @@ class WriterSpec: QuickSpec {
         }        
     }
 }
+ */

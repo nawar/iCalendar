@@ -8,6 +8,10 @@
 
 import Foundation
 
+protocol EventValue {
+    var icsText: String {get}
+}
+
 public struct Event {
     let uid: String
     let startDate: Date
@@ -25,7 +29,7 @@ public struct Event {
 		self.location = location
 	}
 
-    init?(with encoded: [String:EventValueRepresentable]) {
+    init?(with encoded: [String:EventValue]) {
         guard let startDate = encoded[Keys.startDate] as? Date,
             let endDate = encoded[Keys.endDate] as? Date else {
                 return nil
@@ -39,8 +43,8 @@ public struct Event {
         location = encoded[Keys.location] as? String
     }
     
-    var encoded: [String:EventValueRepresentable] {
-        var dict: [String: EventValueRepresentable] = [:]
+    var encoded: [String:EventValue] {
+        var dict: [String: EventValue] = [:]
         dict[Keys.uid] = uid
         dict[Keys.startDate] = startDate
         dict[Keys.endDate] = endDate

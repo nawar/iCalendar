@@ -2,14 +2,14 @@
 //  Parser.swift
 //  iCalendar
 //
+//  Updated by Nawar on 07/06/2018
 //  Created by Michael Brown on 20/05/2017.
 //  Copyright © 2017 iCalendar. All rights reserved.
 //
 
 import Foundation
-import Result
 
-typealias EventDictionary = [String:EventValueRepresentable]
+typealias EventDictionary = [String:EventValue]
 
 struct Context {
     var inCalendar = 0
@@ -33,6 +33,7 @@ enum ParserError: Error {
     case noKey(String)
     case requiredEventFieldsMissing(EventDictionary)
     case dateKeyOutsideOfEvent(String)
+    case invalid(String)
 }
 
 struct Parser {
@@ -58,7 +59,7 @@ struct Parser {
         let normalized = ics.replace(regex: .fold, with: "")
             .replace(regex: .lineEnding, with: String(newLine))
         
-        return normalized.characters.split(separator: newLine).map(String.init)
+        return normalized.split(separator: newLine).map(String.init)
     }
     
     static func unescape(_ text: String) -> String {
@@ -74,7 +75,7 @@ struct Parser {
             return date + "T120000Z"
         }
         
-        if date.characters.last != "Z" {
+        if date.last != "Z" {
             return date + "Z"
         }
         
@@ -93,7 +94,7 @@ struct Parser {
         return params.reduce([String:String]()) {
             resultIn, param in
             var result = resultIn
-            let split = param.characters.split(separator: "=", maxSplits: 1)
+            let split = param.split(separator: "=", maxSplits: 1)
             
             if let paramKey = split.first,
                 let paramVal = split.last {
@@ -103,32 +104,32 @@ struct Parser {
         }
     }
     
-    static func parse(line: String) -> Result<ParsedLine, ParserError> {
-        let valueSplit = line.characters.split(separator: ":", maxSplits: 1)
+    static func parse(line: String) -> (ParsedLine?, ParserError?) {
+        let valueSplit = line.split(separator: ":", maxSplits: 1)
         guard valueSplit.count == 2,
             let vsFirst = valueSplit.first,
-            let vsLast = valueSplit.last else { return .failure(ParserError.noColon(line)) }
+            let vsLast = valueSplit.last else { return (nil,ParserError.noColon(line)) }
         
         let value = String(vsLast)
         let paramsSplit = vsFirst.split(separator: ";")
 
         guard paramsSplit.count > 0,
-            let psFirst = paramsSplit.first else { return .failure(ParserError.noKey(line)) }
+            let psFirst = paramsSplit.first else { return (nil,ParserError.noKey(line)) }
         
         let params = paramsSplit.count > 1 ? paramsSplit.suffix(from: 1).map(String.init) : nil
         let key = String(psFirst)
         
-        return .success(ParsedLine(key: key, params: parse(params: params), value: value))
+        return (ParsedLine(key: key, params: parse(params: params), value: value), nil)
     }
     
-    static func parse(lines: [String]) -> Result<Calendar, ParserError> {
+    static func parse(lines: [String]) -> (Calendar?, ParserError?) {
         do {
             let parsedCtx = try lines.reduce(Context()) {
                 ctxIn, line in
                 
-                let parsedLine = try parse(line: line).dematerialize()
-                var ctx = ctxIn;
-                
+                let parsedLine = parse(line: line).0!
+                var ctx = ctxIn
+
                 switch parsedLine.key {
                 case Key.begin:
                     guard let vtype = VType(rawValue: parsedLine.value) else { throw ParserError.invalidObjectType }
@@ -173,15 +174,17 @@ struct Parser {
                 return ctx
             }
             
-            return .success(Calendar(events: parsedCtx.events))
+            return (Calendar(events: parsedCtx.events),nil)
         } catch let error as ParserError  {
-            return .failure(error)
+            return (nil, error)
         } catch let error {
-            fatalError("Unexpected Error during parsing: \(error)")
+            let errMsg = "Unexpected Error during parsing: \(error)"
+            print(errMsg)
+            return (nil, ParserError.invalid(errMsg))
         }
     }
     
-    public static func parse(ics: String) -> Result<Calendar, ParserError> {
+    public static func parse(ics: String) -> (Calendar?, ParserError?) {
         return ics |> lines |> parse
     }
 }

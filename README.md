@@ -1,5 +1,11 @@
 # iCalendar
 
+Nawar's update:
+
+Cleaned some files and removed unnecessary dependencies to easily build it on Linux. 
+
+----
+
 A very minimal parser for the iCalendar [RFC 5545](https://tools.ietf.org/html/rfc5545) format written in Swift.
 
 It currently only supports [VEVENT](https://tools.ietf.org/html/rfc5545#section-3.6.1) objects and only parses the following VEVENT keys:
