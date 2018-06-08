@@ -9,7 +9,7 @@
 import XCTest
 @testable import iCalendar
 
-class iCalendarParaser: XCTestCase {
+class iCalendarParser: XCTestCase {
 
 	static var allTests = [
 		("should split the input into unfolded lines", testLineParser),
