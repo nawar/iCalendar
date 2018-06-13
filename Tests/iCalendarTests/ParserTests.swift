@@ -9,7 +9,14 @@
 import XCTest
 @testable import iCalendar
 
-class iCalendarParaser: XCTestCase {
+class iCalendarParser: XCTestCase {
+
+	static var allTests = [
+		("should split the input into unfolded lines", testLineParser),
+		("should unfold when only an LF terminates the line", testUnfoldingWhenEndWithLF),
+		("should unfold when folded line starts with a tab",testUnfoldingWhenStartWithTab),
+		("should not unfold lines that don't start with whitespace",testWhenDoesntStartWithWhitespace)
+	]
     
     override func setUp() {
         super.setUp()
@@ -31,7 +38,7 @@ class iCalendarParaser: XCTestCase {
     
     func testUnfoldingWhenEndWithLF() {
         
-        print("- should unfold when only an LF terminates the line")
+        print("should unfold when only an LF terminates the line")
         let lines = Parser.lines(ics: "Line1 Part One\n  Part Two\r\nLine2 Hello")
         XCTAssertTrue(lines.count == 2)
         XCTAssertEqual(lines[0], "Line1 Part One Part Two")
