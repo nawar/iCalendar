@@ -36,7 +36,7 @@ enum ParserError: Error {
     case invalid(String)
 }
 
-struct Parser {
+public struct Parser {
     struct Key {
         static let begin = "BEGIN"
         static let end = "END"
@@ -54,7 +54,7 @@ struct Parser {
         case event = "VEVENT"
     }
     
-    static func lines(ics: String) -> [String] {
+    public static func lines(ics: String) -> [String] {
         let newLine: Character = "\n"
         let normalized = ics.replace(regex: .fold, with: "")
             .replace(regex: .lineEnding, with: String(newLine))
@@ -69,7 +69,7 @@ struct Parser {
             .replace(regex: .escBackslash, with: "\\\\")
     }
     
-    static func dateString(from date: String, params: [String:String]?) -> String {
+    public static func dateString(from date: String, params: [String:String]?) -> String {
         if let params = params,
             params["VALUE"] == "DATE" {
             return date + "T120000Z"
@@ -174,7 +174,7 @@ struct Parser {
                 return ctx
             }
             
-            return (Calendar(events: parsedCtx.events),nil)
+            return (calendar: Calendar(events: parsedCtx.events),error: nil)
         } catch let error as ParserError  {
             return (nil, error)
         } catch let error {
@@ -184,7 +184,7 @@ struct Parser {
         }
     }
     
-    public static func parse(ics: String) -> (Calendar?, ParserError?) {
+    static func parse(ics: String) -> (Calendar?, ParserError?) {
         return ics |> lines |> parse
     }
 }
