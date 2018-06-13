@@ -9,9 +9,9 @@
 
 import Foundation
 
-typealias EventDictionary = [String:EventValue]
+public typealias EventDictionary = [String:EventValue]
 
-struct Context {
+public struct Context {
     var inCalendar = 0
     var inEvent = 0
     var values = EventDictionary()
@@ -24,7 +24,7 @@ struct ParsedLine {
     let value: String
 }
 
-enum ParserError: Error {
+public enum ParserError: Error {
     case invalidObjectType
     case nestedCalendar
     case nestedEvent
@@ -106,10 +106,12 @@ public struct Parser {
     
     static func parse(line: String) -> (ParsedLine?, ParserError?) {
         let valueSplit = line.split(separator: ":", maxSplits: 1)
-        guard valueSplit.count == 2,
-            let vsFirst = valueSplit.first,
-            let vsLast = valueSplit.last else { return (nil,ParserError.noColon(line)) }
+
+        guard 1...2 ~= valueSplit.count,
+            let vsFirst = valueSplit.first
+            else { return (nil,ParserError.noColon(line)) }
         
+        let vsLast = valueSplit.count == 1 ? "" : valueSplit.last!
         let value = String(vsLast)
         let paramsSplit = vsFirst.split(separator: ";")
 
@@ -184,7 +186,7 @@ public struct Parser {
         }
     }
     
-    static func parse(ics: String) -> (Calendar?, ParserError?) {
+    public static func parse(ics: String) -> (Calendar?, ParserError?) {
         return ics |> lines |> parse
     }
 }

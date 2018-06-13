@@ -8,17 +8,17 @@
 
 import Foundation
 
-protocol EventValue {
+public protocol EventValue {
     var icsText: String {get}
 }
 
 public struct Event {
-    let uid: String
-    let startDate: Date
-    let endDate: Date
-    let description: String?
-    let summary: String?
-    let location: String?
+    public let uid: String
+    public let startDate: Date
+    public let endDate: Date
+    public let description: String?
+    public let summary: String?
+    public let location: String?
 	
 	public init(uid: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil) {
 		self.uid = uid

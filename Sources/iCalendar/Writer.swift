@@ -60,13 +60,13 @@ public struct Writer {
 }
 
 extension Date: EventValue {
-	var icsText: String {
+	public var icsText: String {
 		return Writer.dateValueParam + Writer.dateFormatter.string(from: self)
 	}
 }
 
 extension String: EventValue {
-	var icsText: String {
+	public var icsText: String {
 		return ":" + Writer.escape(self)
 	}
 }

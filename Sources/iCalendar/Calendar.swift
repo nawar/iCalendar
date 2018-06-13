@@ -9,7 +9,7 @@
 import Foundation
 
 public struct Calendar {
-    let events: [Event]
+    public let events: [Event]
 	
 	public init(events: [Event]) {
 		self.events = events
