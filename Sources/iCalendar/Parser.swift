@@ -49,9 +49,15 @@ public struct Parser {
         return formatter
     }()
 
+    // Calendar Components
     enum VType: String {
         case calendar = "VCALENDAR"
         case event = "VEVENT"
+        case note = "VTODO"
+        case journal = "VJOURNAL"
+        case freeBusy = "VFREEBUSY"
+        case timeZone = "VTIMEZONE"
+        case alarm = "VALARM"
     }
     
     public static func lines(ics: String) -> [String] {
@@ -142,6 +148,7 @@ public struct Parser {
                     case .event:
                         ctx.inEvent += 1
                         if ctx.inEvent > 1 { throw ParserError.nestedEvent }
+                    default: ()
                     }
                 case Key.end:
                     guard let vtype = VType(rawValue: parsedLine.value) else { throw ParserError.invalidObjectType }
@@ -159,6 +166,7 @@ public struct Parser {
                         
                         ctx.events.append(event)
                         ctx.values.removeAll(keepingCapacity: true)
+                    default: ()
                     }
                 case let key where DateKeys.contains(key):
                     guard ctx.inEvent > 0 else { throw ParserError.dateKeyOutsideOfEvent(line) }
