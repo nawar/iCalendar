@@ -14,7 +14,7 @@ public typealias EventDictionary = [String:EventValue]
 public struct Context {
     var inCalendar = 0
     var inEvent = 0
-    var values = EventDictionary()
+    var values = [String:Any]()
     var events = [Event]()
 }
 
@@ -31,9 +31,11 @@ public enum ParserError: Error {
     case endBeforeBegin
     case noColon(String)
     case noKey(String)
-    case requiredEventFieldsMissing(EventDictionary)
+    case requiredEventFieldsMissing([String:Any])
     case dateKeyOutsideOfEvent(String)
+    case calAddressKeyOutsideOfEvent(String)
     case invalid(String)
+    case noParams(String)
 }
 
 public struct Parser {
@@ -48,7 +50,10 @@ public struct Parser {
         formatter.dateFormat = "yyyyMMdd'T'HHmmssZ"
         return formatter
     }()
-
+    
+    // calAddress components
+    static let CalAddressKeys = [ "ATTENDEE", "ORGANIZER" ]
+    
     // Calendar Components
     enum VType: String {
         case calendar = "VCALENDAR"
@@ -113,10 +118,12 @@ public struct Parser {
     static func parse(line: String) -> (ParsedLine?, ParserError?) {
         let valueSplit = line.split(separator: ":", maxSplits: 1)
 
+        // The split is usually 2 or 1 if there's no value for that field
         guard 1...2 ~= valueSplit.count,
             let vsFirst = valueSplit.first
             else { return (nil,ParserError.noColon(line)) }
         
+        // in case it's optional, we give it an empty string
         let vsLast = valueSplit.count == 1 ? "" : valueSplit.last!
         let value = String(vsLast)
         let paramsSplit = vsFirst.split(separator: ";")
@@ -135,7 +142,7 @@ public struct Parser {
             let parsedCtx = try lines.reduce(Context()) {
                 ctxIn, line in
                 
-                let parsedLine = parse(line: line).0!
+                guard let parsedLine = parse(line: line).0 else { throw ParserError.invalid(line) }
                 var ctx = ctxIn
 
                 switch parsedLine.key {
@@ -176,6 +183,25 @@ public struct Parser {
                     else {
                         ctx.values[key] = parsedLine.value
                     }
+                case let key where CalAddressKeys.contains(key) :
+                    guard ctx.inEvent > 0 else { throw ParserError.calAddressKeyOutsideOfEvent(line) }
+                    guard let params = parsedLine.params else { throw ParserError.noParams(line) }
+                    
+                    switch key {
+                    case "ORGANIZER":
+                        let organizer = Organizer(vCalAddress: parsedLine.value, commonName: params["CN"]!)
+                        ctx.values[key] = organizer
+                    case "ATTENDEE":
+                        let attendee = Attendee(vCalAddress: parsedLine.value, commonName: params["CN"]!)
+                        if let attendeeValue = ctx.values[key] as? [Person] {
+                            ctx.values[key] = attendeeValue + [attendee]
+                        } else {
+                            ctx.values[key] = [attendee]
+                        }
+                        
+                    default: ()
+                    }
+
                 case let key:
                     guard ctx.inEvent > 0 else { break }
                     ctx.values[key] = unescape(parsedLine.value)
@@ -198,3 +224,5 @@ public struct Parser {
         return ics |> lines |> parse
     }
 }
+
+

@@ -19,17 +19,22 @@ public struct Event {
     public let description: String?
     public let summary: String?
     public let location: String?
-	
-	public init(uid: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil) {
+    public let organizer: Person?
+    public let attendees: [Person]?
+
+	public init(uid: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil,
+                organizer: Person? = nil, attendees: [Person]? = nil) {
 		self.uid = uid
 		self.startDate = startDate
 		self.endDate = endDate
 		self.description = description
 		self.summary = summary
 		self.location = location
+        self.organizer = organizer
+        self.attendees = attendees
 	}
 
-    init?(with encoded: [String:EventValue]) {
+    init?(with encoded: [String:Any]) {
         guard let startDate = encoded[Keys.startDate] as? Date,
             let endDate = encoded[Keys.endDate] as? Date else {
                 return nil
@@ -41,6 +46,8 @@ public struct Event {
         description = encoded[Keys.description] as? String
         summary = encoded[Keys.summary] as? String
         location = encoded[Keys.location] as? String
+        organizer = encoded[Keys.organizer] as? Person
+        attendees = encoded[Keys.attendee] as? [Person]
     }
     
     var encoded: [String:EventValue] {
@@ -64,5 +71,7 @@ extension Event {
         case description = "DESCRIPTION"
         case summary = "SUMMARY"
         case location = "LOCATION"
+        case organizer = "ORGANIZER"
+        case attendee = "ATTENDEE"
     }
 }
