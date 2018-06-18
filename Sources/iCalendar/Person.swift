@@ -18,7 +18,7 @@ public class Person {
     
     public func getEmailFromCalAddress() -> String? {
         let splits = vCalAddress.split(separator: ":", maxSplits: 1)
-        if splits.first == "mailto", let last = splits.last {
+        if splits.first?.lowercased() == "mailto", let last = splits.last {
             return String(last)
         }
         

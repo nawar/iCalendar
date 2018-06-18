@@ -14,6 +14,10 @@ public typealias EventDictionary = [String:EventValue]
 public struct Context {
     var inCalendar = 0
     var inEvent = 0
+    var inTimeZone = 0
+    var inStandard = 0
+    var inDayLight = 0
+    var inAlarm = 0
     var values = [String:Any]()
     var events = [Event]()
 }
@@ -32,7 +36,6 @@ public enum ParserError: Error {
     case noColon(String)
     case noKey(String)
     case requiredEventFieldsMissing([String:Any])
-    case dateKeyOutsideOfEvent(String)
     case calAddressKeyOutsideOfEvent(String)
     case invalid(String)
     case noParams(String)
@@ -51,6 +54,12 @@ public struct Parser {
         return formatter
     }()
     
+    static let tzidFormatter: DateFormatter = {
+      let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd'T'HHmmss"
+        return formatter
+    }()
+    
     // calAddress components
     static let CalAddressKeys = [ "ATTENDEE", "ORGANIZER" ]
     
@@ -63,6 +72,13 @@ public struct Parser {
         case freeBusy = "VFREEBUSY"
         case timeZone = "VTIMEZONE"
         case alarm = "VALARM"
+    }
+    
+    // VTIZ Components
+    enum VTiz: String {
+        case timezone = "VTIMEZONE"
+        case standard = "STANDARD"
+        case daylight = "DAYLIGHT"
     }
     
     public static func lines(ics: String) -> [String] {
@@ -86,15 +102,34 @@ public struct Parser {
             return date + "T120000Z"
         }
         
-        if date.last != "Z" {
-            return date + "Z"
-        }
+        /*
+         if date.last != "Z" {
+         return date + "Z"
+         }
+         */
         
         return date
     }
     
     static func parse(date: String, params: [String:String]?) -> Date? {
-        return dateTimeFormatter.date(from: dateString(from: date, params: params))
+        
+        if let params = params,
+            let tzid = params["TZID"] {
+            if let timeZone = DateFormatter.translate(fromWindowsTimezone: tzid) {
+                tzidFormatter.timeZone = TimeZone(identifier: timeZone)
+            } else {
+                tzidFormatter.timeZone = TimeZone(identifier: tzid)
+            }
+            
+            let formattedDate = tzidFormatter.date(from: date)
+            tzidFormatter.timeZone = TimeZone.current // reset the time zone
+            return formattedDate
+
+        } else {
+            
+            return dateTimeFormatter.date(from: dateString(from: date, params: params))
+            
+        }
     }
     
     static func parse(params: [String]?) -> [String:String]? {
@@ -144,46 +179,87 @@ public struct Parser {
                 
                 guard let parsedLine = parse(line: line).0 else { throw ParserError.invalid(line) }
                 var ctx = ctxIn
-
+                
                 switch parsedLine.key {
                 case Key.begin:
-                    guard let vtype = VType(rawValue: parsedLine.value) else { throw ParserError.invalidObjectType }
-                    switch vtype {
-                    case .calendar:
-                        ctx.inCalendar += 1
-                        if ctx.inCalendar > 1  { throw ParserError.nestedCalendar }
-                    case .event:
-                        ctx.inEvent += 1
-                        if ctx.inEvent > 1 { throw ParserError.nestedEvent }
-                    default: ()
-                    }
-                case Key.end:
-                    guard let vtype = VType(rawValue: parsedLine.value) else { throw ParserError.invalidObjectType }
-                    switch vtype {
-                    case .calendar:
-                        ctx.inCalendar -= 1
-                        if ctx.inCalendar != 0 { throw ParserError.endBeforeBegin }
-                    case .event:
-                        ctx.inEvent -= 1
-                        if ctx.inEvent != 0 { throw ParserError.endBeforeBegin }
+                    
+                    // check if it's a calendar components (starts with V)
+                    if let vtype = VType(rawValue: parsedLine.value) {
                         
-                        guard let event = Event(with: ctx.values) else {
-                            throw ParserError.requiredEventFieldsMissing(ctx.values)
+                        switch vtype {
+                        case .calendar:
+                            ctx.inCalendar += 1
+                            if ctx.inCalendar > 1  { throw ParserError.nestedCalendar }
+                        case .event:
+                            ctx.inEvent += 1
+                            if ctx.inEvent > 1 { throw ParserError.nestedEvent }
+                        case .alarm:
+                            ctx.inAlarm += 1
+                        default: ()
                         }
                         
-                        ctx.events.append(event)
-                        ctx.values.removeAll(keepingCapacity: true)
-                    default: ()
+                    } else if let vtiz = VTiz(rawValue: parsedLine.value) {
+                        switch vtiz {
+                        case .timezone:
+                            // An individual "VTIMEZONE" calendar component MUST be specified for
+                            // each unique "TZID" parameter value specified in the iCalendar object.
+                            ctx.inTimeZone += 1
+                        case .standard:
+                            ctx.inStandard += 1
+                        case .daylight:
+                            ctx.inDayLight += 1
+                        }
+                    } else {
+                        throw ParserError.invalidObjectType
                     }
+                    
+                case Key.end:
+                    
+                    // check if it's a calendar components (starts with V)
+                    if let vtype = VType(rawValue: parsedLine.value) {
+                        switch vtype {
+                        case .calendar:
+                            ctx.inCalendar -= 1
+                            if ctx.inCalendar != 0 { throw ParserError.endBeforeBegin }
+                        case .event:
+                            ctx.inEvent -= 1
+                            if ctx.inEvent != 0 { throw ParserError.endBeforeBegin }
+                            
+                            guard let event = Event(with: ctx.values) else {
+                                throw ParserError.requiredEventFieldsMissing(ctx.values)
+                            }
+                            
+                            ctx.events.append(event)
+                            ctx.values.removeAll(keepingCapacity: true)
+                        case .alarm:
+                            ctx.inAlarm -= 1
+                        default: ()
+                        }
+                    } else if let vtiz = VTiz(rawValue: parsedLine.value) {
+                        switch vtiz {
+                        case .timezone:
+                            ctx.inTimeZone -= 1
+                        case .standard:
+                            ctx.inStandard -= 1
+                        case .daylight:
+                            ctx.inDayLight -= 1
+                        }
+                    } else {
+                        throw ParserError.invalidObjectType
+                    }
+                
                 case let key where DateKeys.contains(key):
-                    guard ctx.inEvent > 0 else { throw ParserError.dateKeyOutsideOfEvent(line) }
-                    if let date = parse(date: parsedLine.value, params: parsedLine.params) {
-                        ctx.values[key] = date
+                    
+                    if ctx.inEvent > 0 {
+                        if let date = parse(date: parsedLine.value, params: parsedLine.params) {
+                            ctx.values[key] = date
+                        } else {
+                            ctx.values[key] = parsedLine.value
+                        }
+                    } else if ctx.inStandard > 0 || ctx.inDayLight > 0 {
                     }
-                    else {
-                        ctx.values[key] = parsedLine.value
-                    }
-                case let key where CalAddressKeys.contains(key) :
+                    
+                case let key where CalAddressKeys.contains(key):
                     guard ctx.inEvent > 0 else { throw ParserError.calAddressKeyOutsideOfEvent(line) }
                     guard let params = parsedLine.params else { throw ParserError.noParams(line) }
                     
@@ -204,6 +280,13 @@ public struct Parser {
 
                 case let key:
                     guard ctx.inEvent > 0 else { break }
+                    
+                    // break with anything that is inside a VTIMEZONE
+                    guard ctx.inTimeZone == 0 || ctx.inDayLight == 0 || ctx.inStandard == 0 else { break }
+                    
+                    // ignore everything inside an VALARM
+                    guard ctx.inAlarm == 0 else { break }
+                    
                     ctx.values[key] = unescape(parsedLine.value)
                 }
                 
