@@ -279,7 +279,6 @@ public struct Parser {
                     }
 
                 case let key:
-                    guard ctx.inEvent > 0 else { break }
                     
                     // break with anything that is inside a VTIMEZONE
                     guard ctx.inTimeZone == 0 || ctx.inDayLight == 0 || ctx.inStandard == 0 else { break }

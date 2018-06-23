@@ -14,6 +14,7 @@ public protocol EventValue {
 
 public struct Event {
     public let uid: String
+    public let prodId: String
     public let startDate: Date
     public let endDate: Date
     public let description: String?
@@ -22,9 +23,10 @@ public struct Event {
     public let organizer: Person?
     public let attendees: [Person]?
 
-	public init(uid: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil,
+    public init(uid: String, prodId: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil,
                 organizer: Person? = nil, attendees: [Person]? = nil) {
 		self.uid = uid
+        self.prodId = prodId
 		self.startDate = startDate
 		self.endDate = endDate
 		self.description = description
@@ -41,6 +43,7 @@ public struct Event {
         }
         
         self.uid = encoded[Keys.uid] as? String ?? UUID().uuidString
+        self.prodId = encoded[Keys.prodId] as! String
         self.startDate = startDate
         self.endDate = endDate
         description = encoded[Keys.description] as? String
@@ -53,6 +56,7 @@ public struct Event {
     var encoded: [String:EventValue] {
         var dict: [String: EventValue] = [:]
         dict[Keys.uid] = uid
+        dict[Keys.prodId] = prodId
         dict[Keys.startDate] = startDate
         dict[Keys.endDate] = endDate
         dict[Keys.description] = description
@@ -66,6 +70,7 @@ public struct Event {
 extension Event {
     enum Keys: String {
         case uid = "UID"
+        case prodId = "PRODID"
         case startDate = "DTSTART"
         case endDate = "DTEND"
         case description = "DESCRIPTION"
