@@ -20,10 +20,11 @@ public struct Event {
     public let description: String?
     public let summary: String?
     public let location: String?
+    public let status: String?
     public let organizer: Person?
     public let attendees: [Person]?
 
-    public init(uid: String, prodId: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil,
+    public init(uid: String, prodId: String, startDate: Date, endDate: Date, description: String? = nil, summary: String? = nil, location: String? = nil, status: String,
                 organizer: Person? = nil, attendees: [Person]? = nil) {
 		self.uid = uid
         self.prodId = prodId
@@ -32,6 +33,7 @@ public struct Event {
 		self.description = description
 		self.summary = summary
 		self.location = location
+        self.status = status
         self.organizer = organizer
         self.attendees = attendees
 	}
@@ -49,6 +51,7 @@ public struct Event {
         description = encoded[Keys.description] as? String
         summary = encoded[Keys.summary] as? String
         location = encoded[Keys.location] as? String
+        status = encoded[Keys.status] as? String
         organizer = encoded[Keys.organizer] as? Person
         attendees = encoded[Keys.attendee] as? [Person]
     }
@@ -62,6 +65,7 @@ public struct Event {
         dict[Keys.description] = description
         dict[Keys.summary] = summary
         dict[Keys.location] = location
+        dict[Keys.status] = status
         
         return dict
     }
@@ -76,6 +80,7 @@ extension Event {
         case description = "DESCRIPTION"
         case summary = "SUMMARY"
         case location = "LOCATION"
+        case status = "STATUS"
         case organizer = "ORGANIZER"
         case attendee = "ATTENDEE"
     }
