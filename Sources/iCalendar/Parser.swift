@@ -62,7 +62,13 @@ public struct Parser {
     
     // calAddress components
     static let CalAddressKeys = [ "ATTENDEE", "ORGANIZER" ]
-    
+    static let CalendarUserType = [
+        "INDIVIDUAL",   // An individual
+        "GROUP",        // A group of individuals
+        "RESOURCE",     // A physical resource
+        "ROOM",         // A room resource
+        "UNKNOWN" ]
+
     // Calendar Components
     enum VType: String {
         case calendar = "VCALENDAR"
@@ -262,6 +268,7 @@ public struct Parser {
                 case let key where CalAddressKeys.contains(key):
                     guard ctx.inEvent > 0 else { throw ParserError.calAddressKeyOutsideOfEvent(line) }
                     guard let params = parsedLine.params else { throw ParserError.noParams(line) }
+                    guard let ctype = params["CUTYPE"], ctype == "INDIVIDUAL" else { break /* only process INDIVIDUAL */ }
                     
                     switch key {
                     case "ORGANIZER":
