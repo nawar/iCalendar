@@ -268,13 +268,16 @@ public struct Parser {
                 case let key where CalAddressKeys.contains(key):
                     guard ctx.inEvent > 0 else { throw ParserError.calAddressKeyOutsideOfEvent(line) }
                     guard let params = parsedLine.params else { throw ParserError.noParams(line) }
-                    guard let ctype = params["CUTYPE"], ctype == "INDIVIDUAL" else { break /* only process INDIVIDUAL */ }
-                    
+
                     switch key {
                     case "ORGANIZER":
                         let organizer = Organizer(vCalAddress: parsedLine.value, commonName: params["CN"]!)
                         ctx.values[key] = organizer
                     case "ATTENDEE":
+                        
+                        // if CUTYPE is mentioned and it's anything other than INDIVIDUAL then skip the processing
+                        if let ctype = params["CUTYPE"], ctype != "INDIVIDUAL" { break  }
+                        
                         let attendee = Attendee(vCalAddress: parsedLine.value, commonName: params["CN"]!)
                         if let attendeeValue = ctx.values[key] as? [Person] {
                             ctx.values[key] = attendeeValue + [attendee]
