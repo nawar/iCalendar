@@ -271,14 +271,14 @@ public struct Parser {
 
                     switch key {
                     case "ORGANIZER":
-                        let organizer = Organizer(vCalAddress: parsedLine.value, commonName: params["CN"]!)
+                        let organizer = Organizer(vCalAddress: parsedLine.value, commonName: params["CN"])
                         ctx.values[key] = organizer
                     case "ATTENDEE":
                         
                         // if CUTYPE is mentioned and it's anything other than INDIVIDUAL then skip the processing
                         if let ctype = params["CUTYPE"], ctype != "INDIVIDUAL" { break  }
                         
-                        let attendee = Attendee(vCalAddress: parsedLine.value, commonName: params["CN"]!)
+                        let attendee = Attendee(vCalAddress: parsedLine.value, commonName: params["CN"])
                         if let attendeeValue = ctx.values[key] as? [Person] {
                             ctx.values[key] = attendeeValue + [attendee]
                         } else {

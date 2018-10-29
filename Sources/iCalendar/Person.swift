@@ -9,9 +9,9 @@ import Foundation
 
 public class Person {
     public let vCalAddress: String
-    public let commonName: String
+    public let commonName: String?
     
-    init(vCalAddress: String, commonName: String) {
+    init(vCalAddress: String, commonName: String?) {
         self.vCalAddress = vCalAddress
         self.commonName = commonName
     }
