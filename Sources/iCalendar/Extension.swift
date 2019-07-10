@@ -38,7 +38,7 @@ extension DateFormatter {
             "China Standard Time" : "Asia/Shanghai",
             "Dateline Standard Time" : "Etc/GMT+12",
             "E. Africa Standard Time" : "Africa/Nairobi",
-            "E. Australia Standard Time" : "Australia/Brisbane",
+            "AUS Eastern Standard Time" : "Australia/Brisbane",
             "E. Europe Standard Time" : "Asia/Nicosia",
             "E. South America Standard Time" : "America/Sao_Paulo",
             "Eastern Standard Time" : "America/New_York",
