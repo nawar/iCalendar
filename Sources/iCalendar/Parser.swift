@@ -271,7 +271,13 @@ public struct Parser {
 
                     switch key {
                     case "ORGANIZER":
-                        let organizer = Organizer(vCalAddress: parsedLine.value, commonName: params?["CN"])
+
+                        // the last cal-address is the value for the field
+                        guard let regexGroup = line.lowercased().groups(for: "mailto:[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}"), let calAddress = regexGroup.last?.last else {
+                            throw ParserError.invalid("Error parsing \(key) for a line \(parsedLine.value)")
+                        }
+
+                        let organizer = Organizer(vCalAddress: calAddress, commonName: params?["CN"])
                         ctx.values[key] = organizer
                     case "ATTENDEE":
                         
@@ -314,6 +320,28 @@ public struct Parser {
     
     public static func parse(ics: String) -> (Calendar?, ParserError?) {
         return ics |> lines |> parse
+    }
+}
+
+extension String {
+    func groups(for regexPattern: String) -> [[String]]? {
+        do {
+            let text = self
+            let regex = try NSRegularExpression(pattern: regexPattern)
+            let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
+            return matches.map { match in
+                return (0..<match.numberOfRanges).map {
+                    let rangeBounds = match.range(at: $0)
+                    guard let range = Range(rangeBounds, in: text) else {
+                        return ""
+                    }
+                    return String(text[range])
+                }
+            }
+        } catch let error {
+            print("invalid regex: \(error.localizedDescription)")
+            return []
+        }
     }
 }
 
